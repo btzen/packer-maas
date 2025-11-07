@@ -58,11 +58,6 @@ ifneq ($(strip $(PKEY)),)
 	sed -i s#@PKEY@#${PKEY}#g $@
 	sed -i 's/<!--<ProductKey>/<ProductKey>/;s/<\/ProductKey>-->/<\/ProductKey>/' $@
 endif
-ifeq ($(strip $(VERSION)),10)
-	sed -i 's/<!--<LocalAccounts>/<LocalAccounts>/;s/<\/LocalAccounts>-->/<\/LocalAccounts>/' $@
-else ifeq ($(strip $(VERSION)),11)
-	sed -i 's/<!--<LocalAccounts>/<LocalAccounts>/;s/<\/LocalAccounts>-->/<\/LocalAccounts>/' $@
-endif
 
 extra_drivers:
 	mkisofs -o drivers.iso -V 'Extra Drivers' -input-charset utf-8 -r -J drivers

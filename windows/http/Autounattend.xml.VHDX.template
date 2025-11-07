@@ -48,18 +48,6 @@
                     <Value>Passw0rd</Value>
                     <PlainText>true</PlainText>
                 </AdministratorPassword>
-                <!--<LocalAccounts>
-                    <LocalAccount wcm:action="add">
-                        <Password>
-                            <Value>Passw0rd</Value>
-                            <PlainText>true</PlainText>
-                        </Password>
-                        <Description>Packer Administrator</Description>
-                        <DisplayName>defaultuser</DisplayName>
-                        <Group>Administrators</Group>
-                        <Name>defaultuser</Name>
-                    </LocalAccount>
-                </LocalAccounts>-->
             </UserAccounts>
             <AutoLogon>
                 <Password>
