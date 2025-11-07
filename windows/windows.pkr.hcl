@@ -61,7 +61,9 @@ locals {
     ["-drive", "file=output-windows_builder/packer-windows_builder,format=raw"],
     ["-cdrom", "${var.iso_path}"],
     ["-drive", "file=drivers.iso,media=cdrom,index=3"],
-    ["-boot", "d"]
+    ["-boot", "d"],
+    ["-device", "nec-usb-xhci"],
+    ["-device", "usb-tablet"]
   ]
   tpmargs = [
     ["-chardev", "socket,id=chrtpm,path=/tmp/swtpm/swtpm-sock"],
