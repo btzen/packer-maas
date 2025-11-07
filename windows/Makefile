@@ -10,7 +10,7 @@ ISO ?=
 VHDX ?=
 VERSION ?= 2022
 HEADLESS ?= false
-TIMEOUT ?= 1h
+TIMEOUT ?= 12h
 TEMPLATE ?= http/Autounattend.xml.${FORMAT}.template
 
 ifeq ($(strip $(VERSION)),10)

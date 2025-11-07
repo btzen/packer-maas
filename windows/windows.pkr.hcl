@@ -49,7 +49,7 @@ variable "use_tpm" {
 
 variable "timeout" {
   type    = string
-  default = "1h"
+  default = "12h"
 }
 
 locals {
@@ -89,8 +89,8 @@ source "qemu" "windows_builder" {
   iso_checksum     = "none"
   iso_url          = "${var.iso_path}"
   machine_type     = "q35"
-  memory           = "4096"
-  cpus             = "2"
+  memory           = "8192"
+  cpus             = "4"
   net_device       = "e1000"
   qemuargs         = concat(local.baseargs, (var.use_tpm == "yes" ? local.tpmargs : []))
   shutdown_timeout = "${var.timeout}"
