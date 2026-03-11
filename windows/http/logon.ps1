@@ -127,6 +127,13 @@ try
             Copy-Item -Path "A:\custom.ps1" -Destination "C:\Program Files\Cloudbase Solutions\Cloudbase-Init\LocalScripts\" -Force
         }
 
+        # Download additional files to C:\
+        $Host.UI.RawUI.WindowTitle = "Downloading AME-Beta..."
+        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/AME-Beta-v0.8.4.exe" -Outfile "C:\AME-Beta-v0.8.4.exe"
+
+        $Host.UI.RawUI.WindowTitle = "Downloading Revi-PB..."
+        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Revi-PB-25.10.apbx" -Outfile "C:\Revi-PB-25.10.apbx"
+
         if ($RunPowershell) {
             $Host.UI.RawUI.WindowTitle = "Paused, waiting for user to finish work in other terminal"
             Write-Host "Spawning another powershell for the user to complete any work..."
@@ -141,14 +148,9 @@ try
         # Write success, this is used to check that this process made it this far
         New-Item -Path c:\success.tch -Type file -Force
 
-        $Host.UI.RawUI.WindowTitle = "Running Sysprep..."
-        if ($DoGeneralize) {
-            $unattendedXmlPath = "$ENV:ProgramFiles\Cloudbase Solutions\Cloudbase-Init\conf\Unattend.xml"
-            & "$ENV:SystemRoot\System32\Sysprep\Sysprep.exe" `/generalize `/oobe `/shutdown `/unattend:"$unattendedXmlPath"
-        } else {
-            $unattendedXmlPath = "$ENV:ProgramFiles\Cloudbase Solutions\Cloudbase-Init\conf\Unattend.xml"
-            & "$ENV:SystemRoot\System32\Sysprep\Sysprep.exe" `/oobe `/shutdown `/unattend:"$unattendedXmlPath"
-        }
+        # Write Sysprep command to file for manual execution
+        $generalizeValue = if ($DoGeneralize) { '$true' } else { '$false' }
+        "& 'A:\sysprep.ps1' -DoGeneralize $generalizeValue" | Out-File -FilePath "C:\run-sysprep.txt" -Encoding UTF8
 }
 catch
 {
