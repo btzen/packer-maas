@@ -179,6 +179,9 @@ try
         $Host.UI.RawUI.WindowTitle = "Downloading Revi-PB..."
         Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Revi-PB-25.10.apbx" -Outfile "C:\Revi-PB-25.10.apbx"
 
+        $Host.UI.RawUI.WindowTitle = "Downloading AtlasPlaybook..."
+        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/AtlasPlaybook_v0.5.0-hotfix.apbx" -Outfile "C:\AtlasPlaybook_v0.5.0-hotfix.apbx"
+
         $Host.UI.RawUI.WindowTitle = "Downloading Dism++..."
         Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Dism++10.1.1002.1B.zip" -Outfile "C:\Dism++10.1.1002.1B.zip"
         Expand-Archive -Path "C:\Dism++10.1.1002.1B.zip" -DestinationPath "C:\Dism++10.1.1002.1B" -Force
