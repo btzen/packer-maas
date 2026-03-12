@@ -147,10 +147,6 @@ try
 
         # Write success, this is used to check that this process made it this far
         New-Item -Path c:\success.tch -Type file -Force
-
-        # Write Sysprep command to file for manual execution
-        $generalizeValue = if ($DoGeneralize) { '$true' } else { '$false' }
-        "& 'A:\sysprep.ps1' -DoGeneralize $generalizeValue" | Out-File -FilePath "C:\run-sysprep.txt" -Encoding UTF8
 }
 catch
 {
