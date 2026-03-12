@@ -136,6 +136,7 @@ try
 
         $Host.UI.RawUI.WindowTitle = "Downloading Dism++..."
         Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Dism++10.1.1002.1B.zip" -Outfile "C:\Dism++10.1.1002.1B.zip"
+        Expand-Archive -Path "C:\Dism++10.1.1002.1B.zip" -DestinationPath "C:\Dism++10.1.1002.1B" -Force
 
         if ($RunPowershell) {
             $Host.UI.RawUI.WindowTitle = "Paused, waiting for user to finish work in other terminal"
