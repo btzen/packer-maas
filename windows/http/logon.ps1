@@ -144,9 +144,6 @@ try
         Remove-Item -Path c:\cloudbase.msi
         Remove-Item -Path c:\virtio.msi
         Remove-Item -Path c:\virtio.exe
-
-        # Write success, this is used to check that this process made it this far
-        New-Item -Path c:\success.tch -Type file -Force
 }
 catch
 {
