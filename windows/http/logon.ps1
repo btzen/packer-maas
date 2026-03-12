@@ -98,6 +98,51 @@ try
             throw "Installing $cloudbaseInitPath failed. Log: $cloudbaseInitLog"
         }
 
+        # --- NEW SECTION: CONFIGURE ADMINISTRATOR & UNATTEND.XML ---
+        $cbConfigPath = "$ENV:ProgramFiles\Cloudbase Solutions\Cloudbase-Init\conf\cloudbase-init.conf"
+        $xmlPath = "$ENV:ProgramFiles\Cloudbase Solutions\Cloudbase-Init\conf\Unattend.xml"
+
+        # 1. Update cloudbase-init.conf to target Administrator instead of Admin
+        if (Test-Path $cbConfigPath) {
+            $content = Get-Content $cbConfigPath
+            # Replaces the default username to prevent creation of a new 'Admin' account
+            $content = $content -replace "username=Admin", "username=Administrator"
+            Set-Content $cbConfigPath $content
+        }
+
+        # 2. Update Unattend.xml to enable the built-in Administrator account natively
+        if (Test-Path $xmlPath) {
+            [xml]$xml = Get-Content $xmlPath
+            $ns = "urn:schemas-microsoft-com:unattend"
+            $nsMgr = New-Object System.Xml.XmlNamespaceManager($xml.NameTable)
+            # Define the namespace used in the Unattend XML
+            $nsMgr.AddNamespace("u", $ns)
+
+            # Locate the Shell-Setup component in the oobeSystem pass
+            $shellSetupPath = "//u:settings[@pass='oobeSystem']/u:component[@name='Microsoft-Windows-Shell-Setup']"
+            $shellSetupNode = $xml.SelectSingleNode($shellSetupPath, $nsMgr)
+
+            if ($shellSetupNode -and -not $shellSetupNode.SelectSingleNode("u:UserAccounts", $nsMgr)) {
+                # Use the namespace explicitly during creation to ensure proper inheritance
+                $userAccounts = $xml.CreateElement("UserAccounts", $ns)
+                $adminPw = $xml.CreateElement("AdministratorPassword", $ns)
+                $value = $xml.CreateElement("Value", $ns)
+                $plainText = $xml.CreateElement("PlainText", $ns)
+
+                # Setting an empty value for the password triggers the 'Enabled' state
+                $value.InnerText = ""
+                $plainText.InnerText = "true"
+
+                $adminPw.AppendChild($value) | Out-Null
+                $adminPw.AppendChild($plainText) | Out-Null
+                $userAccounts.AppendChild($adminPw) | Out-Null
+                $shellSetupNode.AppendChild($userAccounts) | Out-Null
+
+                $xml.Save($xmlPath)
+            }
+        }
+        # --- END OF NEW SECTION ---
+
         # Install virtio drivers
         $Host.UI.RawUI.WindowTitle = "Installing Virtio Drivers..."
         certutil -addstore "TrustedPublisher" A:\rh.cer
