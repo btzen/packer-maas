@@ -49,6 +49,14 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Download-File {
+    param($Url, $OutFile)
+    curl.exe -L -o $OutFile $Url
+    if ($LASTEXITCODE -ne 0) {
+        throw "下载失败: $Url"
+    }
+}
+
 try
 {
     # Need to have network connection to continue, wait 30
@@ -63,8 +71,7 @@ try
             # installed.
             # Download the WDK installer.
             $Host.UI.RawUI.WindowTitle = "Downloading Windows Driver Kit..."
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/wdksetup.exe" -Outfile "c:\wdksetup.exe"
+            Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/wdksetup.exe" -OutFile "c:\wdksetup.exe"
 
             # Run the installer.
             $Host.UI.RawUI.WindowTitle = "Installing Windows Driver Kit..."
@@ -88,8 +95,7 @@ try
         }
 
         $Host.UI.RawUI.WindowTitle = "Installing Cloudbase-Init..."
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/CloudbaseInitSetup_Stable_x64.msi" -Outfile "c:\cloudbase.msi"
+        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/CloudbaseInitSetup_Stable_x64.msi" -OutFile "c:\cloudbase.msi"
         $cloudbaseInitLog = "$ENV:Temp\cloudbase_init.log"
         $serialPortName = @(Get-WmiObject Win32_SerialPort)[0].DeviceId
         $p = Start-Process -Wait -PassThru -FilePath msiexec -ArgumentList "/i c:\cloudbase.msi /qn /norestart /l*v $cloudbaseInitLog LOGGINGSERIALPORTNAME=$serialPortName"
@@ -146,9 +152,8 @@ try
         # Install virtio drivers
         $Host.UI.RawUI.WindowTitle = "Installing Virtio Drivers..."
         certutil -addstore "TrustedPublisher" A:\rh.cer
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/virtio-win-gt-x64.msi" -Outfile "c:\virtio.msi"
-        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/virtio-win-guest-tools.exe" -Outfile "c:\virtio.exe"
+        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/virtio-win-gt-x64.msi" -OutFile "c:\virtio.msi"
+        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/virtio-win-guest-tools.exe" -OutFile "c:\virtio.exe"
         $virtioLog = "$ENV:Temp\virtio.log"
         $serialPortName = @(Get-WmiObject Win32_SerialPort)[0].DeviceId
         $p = Start-Process -Wait -PassThru -FilePath msiexec -ArgumentList "/a c:\virtio.msi /qn /norestart /l*v $virtioLog LOGGINGSERIALPORTNAME=$serialPortName"
@@ -174,16 +179,16 @@ try
 
         # Download additional files to C:\
         $Host.UI.RawUI.WindowTitle = "Downloading AME-Beta..."
-        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/AME-Beta-v0.8.4.exe" -Outfile "C:\AME-Beta-v0.8.4.exe"
+        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/AME-Beta-v0.8.4.exe" -OutFile "C:\AME-Beta-v0.8.4.exe"
 
         $Host.UI.RawUI.WindowTitle = "Downloading Revi-PB..."
-        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Revi-PB-25.10.apbx" -Outfile "C:\Revi-PB-25.10.apbx"
+        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Revi-PB-25.10.apbx" -OutFile "C:\Revi-PB-25.10.apbx"
 
         $Host.UI.RawUI.WindowTitle = "Downloading AtlasPlaybook..."
-        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/AtlasPlaybook_v0.5.0-hotfix.apbx" -Outfile "C:\AtlasPlaybook_v0.5.0-hotfix.apbx"
+        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/AtlasPlaybook_v0.5.0-hotfix.apbx" -OutFile "C:\AtlasPlaybook_v0.5.0-hotfix.apbx"
 
         $Host.UI.RawUI.WindowTitle = "Downloading Dism++..."
-        Invoke-WebRequest "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Dism++10.1.1002.1B.zip" -Outfile "C:\Dism++10.1.1002.1B.zip"
+        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Dism++10.1.1002.1B.zip" -OutFile "C:\Dism++10.1.1002.1B.zip"
         Expand-Archive -Path "C:\Dism++10.1.1002.1B.zip" -DestinationPath "C:\Dism++10.1.1002.1B" -Force
 
         if ($RunPowershell) {
