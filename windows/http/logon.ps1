@@ -120,16 +120,6 @@ try
             }
         }
 
-        # Install virtio drivers
-        $Host.UI.RawUI.WindowTitle = "Installing Virtio Drivers..."
-        certutil -addstore "TrustedPublisher" A:\rh.cer
-        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/virtio-win-gt-x64.msi" -OutFile "c:\virtio.msi"
-        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/virtio-win-guest-tools.exe" -OutFile "c:\virtio.exe"
-        $virtioLog = "$ENV:Temp\virtio.log"
-        $serialPortName = @(Get-WmiObject Win32_SerialPort)[0].DeviceId
-        $p = Start-Process -Wait -PassThru -FilePath msiexec -ArgumentList "/a c:\virtio.msi /qn /norestart /l*v $virtioLog LOGGINGSERIALPORTNAME=$serialPortName"
-        $p = Start-Process -Wait -PassThru -FilePath c:\virtio.exe -Argument "/silent"
-
         # We're done, remove LogonScript, disable AutoLogon
         Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" -Name Unattend*
         Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name AutoLogonCount
@@ -170,8 +160,6 @@ try
 
         # Clean-up
         Remove-Item -Path c:\cloudbase.msi
-        Remove-Item -Path c:\virtio.msi
-        Remove-Item -Path c:\virtio.exe
 }
 catch
 {
