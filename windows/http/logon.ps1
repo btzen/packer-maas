@@ -69,13 +69,14 @@ try
             # To install extra drivers the Windows Driver Kit is needed for dpinst.exe.
             # Sadly you cannot just download dpinst.exe. The whole driver kit must be
             # installed.
-            # Download the WDK installer.
+            # Download the WDK offline package (contains wdksetup.exe + Installers folder).
             $Host.UI.RawUI.WindowTitle = "Downloading Windows Driver Kit..."
-            Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/wdksetup.exe" -OutFile "c:\wdksetup.exe"
+            Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/WDK.zip" -OutFile "c:\WDK.zip"
+            Expand-Archive -Path "c:\WDK.zip" -DestinationPath "c:\WDK" -Force
 
-            # Run the installer.
+            # Run the installer from offline package.
             $Host.UI.RawUI.WindowTitle = "Installing Windows Driver Kit..."
-            $p = Start-Process -PassThru -Wait -FilePath "c:\wdksetup.exe" -ArgumentList "/features OptionId.WindowsDriverKitComplete /q /ceip off /norestart"
+            $p = Start-Process -PassThru -Wait -FilePath "c:\WDK\wdksetup.exe" -ArgumentList "/features OptionId.WindowsDriverKitComplete /q /ceip off /norestart"
             if ($p.ExitCode -ne 0)
             {
                 throw "Installing wdksetup.exe failed."
@@ -88,10 +89,11 @@ try
 
             # Uninstall the WDK
             $Host.UI.RawUI.WindowTitle = "Uninstalling Windows Driver Kit..."
-            Start-Process -Wait -FilePath "c:\wdksetup.exe" -ArgumentList "/features + /q /uninstall /norestart"
+            Start-Process -Wait -FilePath "c:\WDK\wdksetup.exe" -ArgumentList "/features + /q /uninstall /norestart"
 
             # Clean-up
-            Remove-Item -Path c:\wdksetup.exe
+            Remove-Item -Path "c:\WDK" -Recurse -Force
+            Remove-Item -Path "c:\WDK.zip" -Force
         }
 
         $Host.UI.RawUI.WindowTitle = "Installing Cloudbase-Init..."
