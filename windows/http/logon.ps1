@@ -106,7 +106,7 @@ try
             throw "Installing $cloudbaseInitPath failed. Log: $cloudbaseInitLog"
         }
 
-        # Configure cloudbase-init to use built-in Administrator account
+        # Configure cloudbase-init plugins
         $cbConfDir = "$ENV:ProgramFiles\Cloudbase Solutions\Cloudbase-Init\conf"
         $cbConfigFiles = @(
             "$cbConfDir\cloudbase-init.conf",
@@ -115,10 +115,14 @@ try
 
         foreach ($cbConfigPath in $cbConfigFiles) {
             if (Test-Path $cbConfigPath) {
-                $content = Get-Content $cbConfigPath
-                $content = $content -replace "username=Admin", "username=Administrator"
-                $content = $content -replace "inject_user_password=true", "inject_user_password=false"
-                Set-Content $cbConfigPath $content
+                $content = Get-Content $cbConfigPath -Encoding UTF8
+                $pluginsLine = "plugins = cloudbaseinit.plugins.common.mtu.MTUPlugin, cloudbaseinit.plugins.windows.ntpclient.NTPClientPlugin, cloudbaseinit.plugins.common.networkconfig.NetworkConfigPlugin, cloudbaseinit.plugins.windows.extendvolumes.ExtendVolumesPlugin, cloudbaseinit.plugins.common.userdata.UserDataPlugin, cloudbaseinit.plugins.common.localscripts.LocalScriptsPlugin"
+                if ($content -match "^\s*plugins\s*=") {
+                    $content = $content -replace "^\s*plugins\s*=.*", $pluginsLine
+                } else {
+                    $content = $content -replace "\[DEFAULT\]", "[DEFAULT]`r`n$pluginsLine"
+                }
+                Set-Content $cbConfigPath $content -Encoding UTF8
             }
         }
 
@@ -147,12 +151,85 @@ try
         $Host.UI.RawUI.WindowTitle = "Downloading Revi-PB..."
         Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Revi-PB-25.10.apbx" -OutFile "C:\Revi-PB-25.10.apbx"
 
-        $Host.UI.RawUI.WindowTitle = "Downloading AtlasPlaybook..."
-        Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/AtlasPlaybook_v0.5.0-hotfix.apbx" -OutFile "C:\AtlasPlaybook_v0.5.0-hotfix.apbx"
-
         $Host.UI.RawUI.WindowTitle = "Downloading Dism++..."
         Download-File -Url "https://disk.bt.plus/sd/vCLqIdZA/packer-maas-down/Dism++10.1.1002.1B.zip" -OutFile "C:\Dism++10.1.1002.1B.zip"
         Expand-Archive -Path "C:\Dism++10.1.1002.1B.zip" -DestinationPath "C:\Dism++10.1.1002.1B" -Force
+
+        # ===== System registry modifications =====
+        $Host.UI.RawUI.WindowTitle = "Configuring system registry..."
+
+        # Disable firewall service
+        $mpssvcPath = "HKLM:\SYSTEM\CurrentControlSet\Services\mpssvc"
+        if (-not (Test-Path $mpssvcPath)) { New-Item -Path $mpssvcPath -Force | Out-Null }
+        Set-ItemProperty -Path $mpssvcPath -Name "Start" -Value 4 -Type DWord
+
+        # Disable UAC
+        $uacPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+        if (-not (Test-Path $uacPath)) { New-Item -Path $uacPath -Force | Out-Null }
+        Set-ItemProperty -Path $uacPath -Name "ConsentPromptBehaviorAdmin" -Value 0 -Type DWord
+        Set-ItemProperty -Path $uacPath -Name "EnableLUA" -Value 0 -Type DWord
+        Set-ItemProperty -Path $uacPath -Name "PromptOnSecureDesktop" -Value 0 -Type DWord
+
+        # Disable SmartScreen filter
+        $smartscreenPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+        if (-not (Test-Path $smartscreenPath)) { New-Item -Path $smartscreenPath -Force | Out-Null }
+        Set-ItemProperty -Path $smartscreenPath -Name "SmartScreenEnabled" -Value "off" -Type String
+
+        # Hide 7 folders from This PC
+        $clsidList = @(
+            "{31C0DD25-9439-4F12-BF41-7FF4EDA38722}",  # 3D Objects
+            "{7d83ee9b-2244-4e70-b1f5-5393042af1e4}",  # Downloads
+            "{a0c69a99-21c8-4671-8703-7934162fcf1d}",  # Music
+            "{0ddd015d-b06c-45d5-8c4c-f59713854639}",  # Pictures
+            "{35286a68-3c57-41a1-bbb1-0eae73d76c95}",  # Videos
+            "{f42ee2d3-909f-4907-8871-4c22fc0bf756}",  # Documents
+            "{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}"   # Desktop
+        )
+        foreach ($clsid in $clsidList) {
+            $propBagPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\$clsid\PropertyBag"
+            if (-not (Test-Path $propBagPath)) {
+                New-Item -Path $propBagPath -Force | Out-Null
+            }
+            Set-ItemProperty -Path $propBagPath -Name "ThisPCPolicy" -Value "Hide" -Type String
+        }
+
+        # ===== User registry modifications (default user NTUSER.DAT) =====
+        $Host.UI.RawUI.WindowTitle = "Configuring default user registry..."
+
+        $tempHiveName = "TempDefaultUser"
+        reg load "HKLM\$tempHiveName" "C:\Users\Default\NTUSER.DAT"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to load default user registry hive" }
+
+        $userRoot = "HKLM:\$tempHiveName"
+
+        # Hide taskbar search
+        $searchPath = "$userRoot\SOFTWARE\Microsoft\Windows\CurrentVersion\Search"
+        if (-not (Test-Path $searchPath)) { New-Item -Path $searchPath -Force | Out-Null }
+        Set-ItemProperty -Path $searchPath -Name "SearchboxTaskbarMode" -Value 0 -Type DWord
+
+        # Hide Task View / Never combine taskbar buttons / Open Explorer to This PC / Show file extensions
+        $advPath = "$userRoot\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        if (-not (Test-Path $advPath)) { New-Item -Path $advPath -Force | Out-Null }
+        Set-ItemProperty -Path $advPath -Name "ShowTaskViewButton" -Value 0 -Type DWord
+        Set-ItemProperty -Path $advPath -Name "TaskbarGlomLevel" -Value 2 -Type DWord
+        Set-ItemProperty -Path $advPath -Name "LaunchTo" -Value 1 -Type DWord
+        Set-ItemProperty -Path $advPath -Name "HideFileExt" -Value 0 -Type DWord
+
+        # Disable frequent/recent folders in Quick Access
+        $explorerPath = "$userRoot\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+        if (-not (Test-Path $explorerPath)) { New-Item -Path $explorerPath -Force | Out-Null }
+        Set-ItemProperty -Path $explorerPath -Name "ShowFrequent" -Value 0 -Type DWord
+        Set-ItemProperty -Path $explorerPath -Name "ShowRecent" -Value 0 -Type DWord
+
+        # Disable "Open File - Security Warning" dialog
+        $assocPath = "$userRoot\Software\Microsoft\Windows\CurrentVersion\Policies\Associations"
+        if (-not (Test-Path $assocPath)) { New-Item -Path $assocPath -Force | Out-Null }
+        Set-ItemProperty -Path $assocPath -Name "ModRiskFileTypes" -Value ".bat;.exe;.reg;.vbs;.chm;.msi;.js;.cmd" -Type String
+
+        # Unload default user registry hive
+        [GC]::Collect()
+        reg unload "HKLM\$tempHiveName"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to unload default user registry hive" }
 
         if ($RunPowershell) {
             $Host.UI.RawUI.WindowTitle = "Paused, waiting for user to finish work in other terminal"
