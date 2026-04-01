@@ -214,6 +214,7 @@ try
         Set-ItemProperty -Path $advPath -Name "TaskbarGlomLevel" -Value 2 -Type DWord
         Set-ItemProperty -Path $advPath -Name "LaunchTo" -Value 1 -Type DWord
         Set-ItemProperty -Path $advPath -Name "HideFileExt" -Value 0 -Type DWord
+        Set-ItemProperty -Path $advPath -Name "AutoCheckSelect" -Value 0 -Type DWord
 
         # Disable frequent/recent folders in Quick Access
         $explorerPath = "$userRoot\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
