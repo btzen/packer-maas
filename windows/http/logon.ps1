@@ -113,10 +113,13 @@ try
             "$cbConfDir\cloudbase-init-unattend.conf"
         )
 
+        $pluginsUnattend = "plugins=cloudbaseinit.plugins.common.mtu.MTUPlugin,cloudbaseinit.plugins.windows.ntpclient.NTPClientPlugin,cloudbaseinit.plugins.common.networkconfig.NetworkConfigPlugin,cloudbaseinit.plugins.windows.extendvolumes.ExtendVolumesPlugin"
+        $pluginsMain = "plugins=cloudbaseinit.plugins.common.mtu.MTUPlugin,cloudbaseinit.plugins.windows.ntpclient.NTPClientPlugin,cloudbaseinit.plugins.common.networkconfig.NetworkConfigPlugin,cloudbaseinit.plugins.common.userdata.UserDataPlugin,cloudbaseinit.plugins.common.localscripts.LocalScriptsPlugin"
+
         foreach ($cbConfigPath in $cbConfigFiles) {
             if (Test-Path $cbConfigPath) {
                 $content = Get-Content $cbConfigPath -Encoding UTF8
-                $pluginsLine = "plugins = cloudbaseinit.plugins.common.mtu.MTUPlugin, cloudbaseinit.plugins.windows.ntpclient.NTPClientPlugin, cloudbaseinit.plugins.common.networkconfig.NetworkConfigPlugin, cloudbaseinit.plugins.windows.extendvolumes.ExtendVolumesPlugin, cloudbaseinit.plugins.common.userdata.UserDataPlugin, cloudbaseinit.plugins.common.localscripts.LocalScriptsPlugin"
+                $pluginsLine = if ($cbConfigPath -match "unattend") { $pluginsUnattend } else { $pluginsMain }
                 if ($content -match "^\s*plugins\s*=") {
                     $content = $content -replace "^\s*plugins\s*=.*", $pluginsLine
                 } else {
