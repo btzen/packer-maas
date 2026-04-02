@@ -106,27 +106,20 @@ try
             throw "Installing $cloudbaseInitPath failed. Log: $cloudbaseInitLog"
         }
 
-        # Configure cloudbase-init plugins
+        # Configure cloudbase-init plugins (main config only)
         $cbConfDir = "$ENV:ProgramFiles\Cloudbase Solutions\Cloudbase-Init\conf"
-        $cbConfigFiles = @(
-            "$cbConfDir\cloudbase-init.conf",
-            "$cbConfDir\cloudbase-init-unattend.conf"
-        )
+        $cbConfigPath = "$cbConfDir\cloudbase-init.conf"
 
-        $pluginsUnattend = "plugins=cloudbaseinit.plugins.common.mtu.MTUPlugin,cloudbaseinit.plugins.windows.extendvolumes.ExtendVolumesPlugin"
         $pluginsMain = "plugins=cloudbaseinit.plugins.common.mtu.MTUPlugin,cloudbaseinit.plugins.windows.ntpclient.NTPClientPlugin,cloudbaseinit.plugins.common.networkconfig.NetworkConfigPlugin,cloudbaseinit.plugins.common.userdata.UserDataPlugin,cloudbaseinit.plugins.common.localscripts.LocalScriptsPlugin"
 
-        foreach ($cbConfigPath in $cbConfigFiles) {
-            if (Test-Path $cbConfigPath) {
-                $content = Get-Content $cbConfigPath -Encoding UTF8
-                $pluginsLine = if ($cbConfigPath -match "unattend") { $pluginsUnattend } else { $pluginsMain }
-                if ($content -match "^\s*plugins\s*=") {
-                    $content = $content -replace "^\s*plugins\s*=.*", $pluginsLine
-                } else {
-                    $content = $content -replace "\[DEFAULT\]", "[DEFAULT]`r`n$pluginsLine"
-                }
-                Set-Content $cbConfigPath $content -Encoding UTF8
+        if (Test-Path $cbConfigPath) {
+            $content = Get-Content $cbConfigPath -Encoding UTF8
+            if ($content -match "^\s*plugins\s*=") {
+                $content = $content -replace "^\s*plugins\s*=.*", $pluginsMain
+            } else {
+                $content = $content -replace "\[DEFAULT\]", "[DEFAULT]`r`n$pluginsMain"
             }
+            Set-Content $cbConfigPath $content -Encoding UTF8
         }
 
         # We're done, remove LogonScript, disable AutoLogon
