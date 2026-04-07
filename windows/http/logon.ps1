@@ -202,6 +202,11 @@ try
         Set-ItemProperty -Path $explorerPath -Name "ShowFrequent" -Value 0 -Type DWord
         Set-ItemProperty -Path $explorerPath -Name "ShowRecent" -Value 0 -Type DWord
 
+        # Restore classic right-click context menu (Win11)
+        $ctxMenuPath = "$userRoot\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+        if (-not (Test-Path $ctxMenuPath)) { New-Item -Path $ctxMenuPath -Force | Out-Null }
+        Set-ItemProperty -Path $ctxMenuPath -Name "(Default)" -Value "" -Type String
+
         # Disable "Open File - Security Warning" dialog
         $assocPath = "$userRoot\Software\Microsoft\Windows\CurrentVersion\Policies\Associations"
         if (-not (Test-Path $assocPath)) { New-Item -Path $assocPath -Force | Out-Null }
