@@ -138,11 +138,6 @@ try
         # ===== System registry modifications =====
         $Host.UI.RawUI.WindowTitle = "Configuring system registry..."
 
-        # Disable firewall service
-        $mpssvcPath = "HKLM:\SYSTEM\CurrentControlSet\Services\mpssvc"
-        if (-not (Test-Path $mpssvcPath)) { New-Item -Path $mpssvcPath -Force | Out-Null }
-        Set-ItemProperty -Path $mpssvcPath -Name "Start" -Value 4 -Type DWord
-
         # Disable UAC
         $uacPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
         if (-not (Test-Path $uacPath)) { New-Item -Path $uacPath -Force | Out-Null }
