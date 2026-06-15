@@ -49,7 +49,7 @@ variable "use_tpm" {
 
 variable "timeout" {
   type    = string
-  default = "1h"
+  default = "12h"
 }
 
 locals {
@@ -61,7 +61,9 @@ locals {
     ["-drive", "file=output-windows_builder/packer-windows_builder,format=raw"],
     ["-cdrom", "${var.iso_path}"],
     ["-drive", "file=drivers.iso,media=cdrom,index=3"],
-    ["-boot", "d"]
+    ["-boot", "d"],
+    ["-device", "nec-usb-xhci"],
+    ["-device", "usb-tablet"]
   ]
   tpmargs = [
     ["-chardev", "socket,id=chrtpm,path=/tmp/swtpm/swtpm-sock"],
@@ -79,7 +81,7 @@ source "qemu" "windows_builder" {
   disk_interface   = "sata"
   disk_image       = "${var.is_vhdx}"
   disk_size        = "${var.disk_size}"
-  floppy_files     = ["./http/Autounattend.xml", "./http/logon.ps1", "./http/rh.cer", "./http/custom.ps1"]
+  floppy_files     = ["./http/Autounattend.xml", "./http/logon.ps1", "./http/rh.cer", "./http/custom.ps1", "./http/sysprep.ps1"]
   floppy_label     = "flop"
   format           = "raw"
   headless         = "${var.headless}"
@@ -87,8 +89,8 @@ source "qemu" "windows_builder" {
   iso_checksum     = "none"
   iso_url          = "${var.iso_path}"
   machine_type     = "q35"
-  memory           = "4096"
-  cpus             = "2"
+  memory           = "8192"
+  cpus             = "4"
   net_device       = "e1000"
   qemuargs         = concat(local.baseargs, (var.use_tpm == "yes" ? local.tpmargs : []))
   shutdown_timeout = "${var.timeout}"

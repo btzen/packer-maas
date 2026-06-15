@@ -10,7 +10,7 @@ ISO ?=
 VHDX ?=
 VERSION ?= 2022
 HEADLESS ?= false
-TIMEOUT ?= 1h
+TIMEOUT ?= 12h
 TEMPLATE ?= http/Autounattend.xml.${FORMAT}.template
 
 ifeq ($(strip $(VERSION)),10)
@@ -57,11 +57,6 @@ http/Autounattend.xml: ${TEMPLATE}
 ifneq ($(strip $(PKEY)),)
 	sed -i s#@PKEY@#${PKEY}#g $@
 	sed -i 's/<!--<ProductKey>/<ProductKey>/;s/<\/ProductKey>-->/<\/ProductKey>/' $@
-endif
-ifeq ($(strip $(VERSION)),10)
-	sed -i 's/<!--<LocalAccounts>/<LocalAccounts>/;s/<\/LocalAccounts>-->/<\/LocalAccounts>/' $@
-else ifeq ($(strip $(VERSION)),11)
-	sed -i 's/<!--<LocalAccounts>/<LocalAccounts>/;s/<\/LocalAccounts>-->/<\/LocalAccounts>/' $@
 endif
 
 extra_drivers:
